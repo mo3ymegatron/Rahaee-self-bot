@@ -1,0 +1,164 @@
+```markdown
+# 𓃠 Rahaei ✨
+
+### Freedom in the Shadow
+
+---
+
+![Version](https://img.shields.io/badge/version-1.0.0-blue?style=for-the-badge&logo=github)
+![Python](https://img.shields.io/badge/Python-3.9+-green?style=for-the-badge&logo=python)
+![License](https://img.shields.io/badge/License-MIT-red?style=for-the-badge&logo=opensourceinitiative)
+![Telegram](https://img.shields.io/badge/Telegram-SelfBot-purple?style=for-the-badge&logo=telegram)
+![Status](https://img.shields.io/badge/Status-Active-success?style=for-the-badge&logo=telegram)
+
+---
+
+> **"Freedom means you are the master of your own will"**
+
+---
+
+## ✨ About Rahaei
+
+**Rahaei** (meaning "Liberation" in Persian) is an advanced, modular, and intelligent Telegram Self-Bot built with Python and Pyrogram. It gives you **complete control** over your Telegram account with AI-powered features, security tools, and entertainment modules.
+
+> **"Rahaei - Where Freedom Meets Intelligence"**
+
+---
+
+## 🌟 Key Features
+
+| Category | Features |
+|----------|----------|
+| 🤖 **AI & NLP** | GPT-4, Gemini AI, Smart Replies, Translation, Text Summarization |
+| 🔐 **Security** | Flood Protection, Spam Detection, Anti-Ban System, Permission Levels |
+| 🎮 **Entertainment** | Interactive Games, Tournaments, Leaderboards, Daily Challenges |
+| 🛠 **Tools** | Download Manager, Format Converter, OCR, QR Code Generator |
+| 🌐 **Web Panel** | Full Dashboard, Live Stats, Remote Control, Reports |
+| 🔄 **Self-Healing** | Auto-Restart, Error Recovery, FloodWait Management |
+| 📊 **Analytics** | User Activity, Group Stats, Weekly Reports, Behavior Analysis |
+
+---
+
+## 📋 Basic Commands
+
+| Command | Description |
+|---------|-------------|
+| `.help` | Show help menu |
+| `.panel` | Open control panel |
+| `.ai <text>` | Chat with AI |
+| `.ping` | Check bot speed |
+| `.stats` | View statistics |
+| `.backup` | Create backup |
+| `.update` | Update the bot |
+
+---
+
+## 📂 Project Structure
+
+```
+
+rahaee/
+├── src/                 # Core source code
+│   ├── core/           # Main engine
+│   ├── modules/        # Feature modules
+│   └── web/            # Web dashboard
+├── data/               # Database files
+├── logs/               # System logs
+├── docs/               # Documentation
+└── scripts/            # Utility scripts
+
+```
+
+---
+
+## 🚀 Quick Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/mo3ymegatron/Rahaee-self-bot.git
+cd Rahaee-self-bot
+
+# Run automatic setup
+bash scripts/setup.sh
+
+# Configure environment
+nano .env
+
+# Start the bot
+python main.py
+```
+
+---
+
+🤝 Contributing
+
+We welcome contributions! Please read our Contributing Guide first.
+
+---
+
+📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+
+<br>
+
+---
+
+⚖️ Legal Notice
+
+<div align="center">
+
+⚠️ IMPORTANT LEGAL NOTICE ⚠️
+
+---
+
+</div>
+
+This project and all its source code are the exclusive property of Mostafa Sadeghi (@UXlor on Telegram).
+
+· Unauthorized copying, distribution, modification, or commercial use of any part of this project without explicit written permission from the owner is STRICTLY PROHIBITED.
+· Violation of these terms will result in legal action under applicable copyright and intellectual property laws.
+· This project is protected by international copyright laws and treaties.
+· The owner reserves all rights not expressly granted.
+
+If you wish to use any part of this code, please contact the owner directly to obtain proper authorization.
+
+---
+
+<br>
+
+---
+
+📞 Contact
+
+<div align="center">
+
+Platform Link
+📱 Telegram https://t.me/UXlor
+🐙 GitHub https://github.com/mo3ymegatron
+📧 Email mostafa.sadeghi.1388.2@gmail.com
+
+</div>
+
+---
+
+<br>
+
+---
+
+<div align="center">
+
+🌟 Support This Project
+
+If you like this project, please give it a ⭐ on GitHub!
+
+---
+
+© 2026 Mostafa Sadeghi | All Rights Reserved
+
+Version 1.0.0
+
+</div>
+```

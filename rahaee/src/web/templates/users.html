@@ -1,0 +1,965 @@
+{% extends "base.html" %}
+
+{% block title %}مدیریت کاربران - رهایی{% endblock %}
+
+{% block page_title %}👥 مدیریت کاربران{% endblock %}
+
+{% block content %}
+<div class="users-container">
+    <!-- ============================================================ -->
+    <!-- فیلترها و جستجو -->
+    <!-- ============================================================ -->
+    <div class="users-toolbar">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="جستجوی کاربر..." onkeyup="searchUsers()">
+        </div>
+        <div class="filter-box">
+            <select id="filterSelect" onchange="filterUsers()">
+                <option value="all">همه کاربران</option>
+                <option value="admin">مدیران</option>
+                <option value="user">کاربران عادی</option>
+                <option value="banned">بلاک شده‌ها</option>
+            </select>
+        </div>
+        <button class="btn-refresh" onclick="loadUsers()">
+            <i class="fas fa-sync-alt"></i>
+            بروزرسانی
+        </button>
+    </div>
+    
+    <!-- ============================================================ -->
+    <!-- جدول کاربران -->
+    <!-- ============================================================ -->
+    <div class="users-table-container">
+        <table class="users-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>کاربر</th>
+                    <th>آیدی</th>
+                    <th>یوزرنیم</th>
+                    <th>نقش</th>
+                    <th>وضعیت</th>
+                    <th>پیام‌ها</th>
+                    <th>عضویت</th>
+                    <th>عملیات</th>
+                </tr>
+            </thead>
+            <tbody id="usersTableBody">
+                <tr>
+                    <td colspan="9" class="loading-cell">
+                        <div class="spinner"></div>
+                        <span>در حال بارگذاری کاربران...</span>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- ============================================================ -->
+    <!-- صفحه‌بندی -->
+    <!-- ============================================================ -->
+    <div class="pagination-container">
+        <div class="pagination-info" id="paginationInfo">
+            نمایش ۱ تا ۲۰ از ۰ کاربر
+        </div>
+        <div class="pagination-controls" id="paginationControls">
+            <button class="page-btn" onclick="changePage('prev')" disabled>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            <span class="page-numbers" id="pageNumbers">
+                <span class="page-number active">۱</span>
+            </span>
+            <button class="page-btn" onclick="changePage('next')" disabled>
+                <i class="fas fa-chevron-left"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- مودال جزئیات کاربر -->
+<!-- ============================================================ -->
+<div class="modal" id="userModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle">👤 جزئیات کاربر</h3>
+            <button class="modal-close" onclick="closeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body" id="modalBody">
+            <div class="user-detail-grid">
+                <div class="detail-item">
+                    <span class="detail-label">نام</span>
+                    <span class="detail-value" id="detailName">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">نام خانوادگی</span>
+                    <span class="detail-value" id="detailLastName">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">آیدی</span>
+                    <span class="detail-value" id="detailId">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">یوزرنیم</span>
+                    <span class="detail-value" id="detailUsername">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">شماره تماس</span>
+                    <span class="detail-value" id="detailPhone">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">نقش</span>
+                    <span class="detail-value" id="detailRole">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">وضعیت</span>
+                    <span class="detail-value" id="detailStatus">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">پیام‌ها</span>
+                    <span class="detail-value" id="detailMessages">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">دستورات</span>
+                    <span class="detail-value" id="detailCommands">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">تاریخ عضویت</span>
+                    <span class="detail-value" id="detailCreated">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">آخرین فعالیت</span>
+                    <span class="detail-value" id="detailLastSeen">-</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-label">بیوگرافی</span>
+                    <span class="detail-value" id="detailBio">-</span>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer" id="modalFooter">
+            <button class="btn btn-secondary" onclick="closeModal()">بستن</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // ============================================================
+    // متغیرها
+    // ============================================================
+    let currentPage = 1;
+    let totalPages = 1;
+    let totalUsers = 0;
+    let currentFilter = 'all';
+    let currentSearch = '';
+    
+    // ============================================================
+    // بارگذاری اولیه
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        loadUsers();
+    });
+    
+    // ============================================================
+    // بارگذاری کاربران
+    // ============================================================
+    async function loadUsers() {
+        try {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="loading-cell">
+                        <div class="spinner"></div>
+                        <span>در حال بارگذاری کاربران...</span>
+                    </td>
+                </tr>
+            `;
+            
+            const url = `/api/users?page=${currentPage}&per_page=20&filter=${currentFilter}&search=${encodeURIComponent(currentSearch)}`;
+            const data = await fetchAPI(url);
+            
+            totalUsers = data.data.total;
+            totalPages = data.data.total_pages;
+            
+            updatePagination();
+            
+            if (data.data.users.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty-cell">
+                            <i class="fas fa-inbox"></i>
+                            <span>هیچ کاربری یافت نشد</span>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = data.data.users.map((user, index) => {
+                const rowIndex = (currentPage - 1) * 20 + index + 1;
+                const role = user.is_admin ? 'مدیر' : 'کاربر عادی';
+                const status = user.is_banned ? '🚫 بلاک' : '✅ فعال';
+                const statusClass = user.is_banned ? 'status-banned' : 'status-active';
+                const createdDate = user.created_at ? new Date(user.created_at).toLocaleDateString('fa-IR') : '-';
+                
+                return `
+                    <tr>
+                        <td>${rowIndex}</td>
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar-small">
+                                    ${user.first_name ? user.first_name.charAt(0).toUpperCase() : '?'}
+                                </div>
+                                <span>${user.first_name || 'نامشخص'}</span>
+                            </div>
+                        </td>
+                        <td><code>${user.id}</code></td>
+                        <td>${user.username ? '@' + user.username : '-'}</td>
+                        <td><span class="role-badge ${user.is_admin ? 'role-admin' : 'role-user'}">${role}</span></td>
+                        <td><span class="status-badge ${statusClass}">${status}</span></td>
+                        <td>${user.message_count || 0}</td>
+                        <td>${createdDate}</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-action btn-view" onclick="viewUser(${user.id})" title="مشاهده جزئیات">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                ${!user.is_banned ? `
+                                    <button class="btn-action btn-ban" onclick="banUser(${user.id})" title="بلاک کاربر">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                ` : `
+                                    <button class="btn-action btn-unban" onclick="unbanUser(${user.id})" title="آنبلاک کاربر">
+                                        <i class="fas fa-check-circle"></i>
+                                    </button>
+                                `}
+                                ${!user.is_admin ? `
+                                    <button class="btn-action btn-make-admin" onclick="makeAdmin(${user.id})" title="افزودن مدیر">
+                                        <i class="fas fa-user-cog"></i>
+                                    </button>
+                                ` : `
+                                    <button class="btn-action btn-remove-admin" onclick="removeAdmin(${user.id})" title="حذف مدیر">
+                                        <i class="fas fa-user-slash"></i>
+                                    </button>
+                                `}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+        } catch (error) {
+            console.error('Error loading users:', error);
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="error-cell">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>خطا در بارگذاری کاربران: ${error.message}</span>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+    
+    // ============================================================
+    // صفحه‌بندی
+    // ============================================================
+    function updatePagination() {
+        document.getElementById('paginationInfo').textContent = 
+            `نمایش ۱ تا ${Math.min(20, totalUsers)} از ${totalUsers} کاربر`;
+        
+        const controls = document.getElementById('paginationControls');
+        const prevBtn = controls.querySelector('.page-btn:first-child');
+        const nextBtn = controls.querySelector('.page-btn:last-child');
+        
+        prevBtn.disabled = currentPage <= 1;
+        nextBtn.disabled = currentPage >= totalPages;
+        
+        let pageNumbers = '';
+        const maxVisible = 5;
+        let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+        let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+        
+        if (endPage - startPage < maxVisible - 1) {
+            startPage = Math.max(1, endPage - maxVisible + 1);
+        }
+        
+        if (startPage > 1) {
+            pageNumbers += `<span class="page-number" onclick="goToPage(1)">۱</span>`;
+            if (startPage > 2) {
+                pageNumbers += `<span class="page-dots">...</span>`;
+            }
+        }
+        
+        for (let i = startPage; i <= endPage; i++) {
+            pageNumbers += `<span class="page-number ${i === currentPage ? 'active' : ''}" onclick="goToPage(${i})">${i}</span>`;
+        }
+        
+        if (endPage < totalPages) {
+            if (endPage < totalPages - 1) {
+                pageNumbers += `<span class="page-dots">...</span>`;
+            }
+            pageNumbers += `<span class="page-number" onclick="goToPage(${totalPages})">${totalPages}</span>`;
+        }
+        
+        document.getElementById('pageNumbers').innerHTML = pageNumbers;
+    }
+    
+    function changePage(direction) {
+        if (direction === 'prev' && currentPage > 1) {
+            currentPage--;
+        } else if (direction === 'next' && currentPage < totalPages) {
+            currentPage++;
+        }
+        loadUsers();
+    }
+    
+    function goToPage(page) {
+        currentPage = page;
+        loadUsers();
+    }
+    
+    // ============================================================
+    // جستجو و فیلتر
+    // ============================================================
+    function searchUsers() {
+        currentSearch = document.getElementById('searchInput').value;
+        currentPage = 1;
+        loadUsers();
+    }
+    
+    function filterUsers() {
+        currentFilter = document.getElementById('filterSelect').value;
+        currentPage = 1;
+        loadUsers();
+    }
+    
+    // ============================================================
+    // عملیات روی کاربران
+    // ============================================================
+    async function viewUser(userId) {
+        try {
+            const data = await fetchAPI(`/api/user/${userId}`);
+            const user = data.data;
+            
+            document.getElementById('modalTitle').textContent = `👤 ${user.first_name || 'کاربر'}`;
+            document.getElementById('detailName').textContent = user.first_name || '-';
+            document.getElementById('detailLastName').textContent = user.last_name || '-';
+            document.getElementById('detailId').textContent = user.id;
+            document.getElementById('detailUsername').textContent = user.username ? '@' + user.username : '-';
+            document.getElementById('detailPhone').textContent = user.phone || '-';
+            document.getElementById('detailRole').textContent = user.is_admin ? 'مدیر' : 'کاربر عادی';
+            document.getElementById('detailStatus').textContent = user.is_banned ? '🚫 بلاک' : '✅ فعال';
+            document.getElementById('detailMessages').textContent = user.message_count || 0;
+            document.getElementById('detailCommands').textContent = user.command_count || 0;
+            document.getElementById('detailCreated').textContent = user.created_at ? new Date(user.created_at).toLocaleDateString('fa-IR') : '-';
+            document.getElementById('detailLastSeen').textContent = user.last_seen ? new Date(user.last_seen).toLocaleDateString('fa-IR') : '-';
+            document.getElementById('detailBio').textContent = user.bio || 'ثبت نشده';
+            
+            // دکمه‌های عملیات در مودال
+            const footer = document.getElementById('modalFooter');
+            footer.innerHTML = `
+                <button class="btn btn-secondary" onclick="closeModal()">بستن</button>
+                ${!user.is_banned ? `
+                    <button class="btn btn-danger" onclick="banUser(${user.id}); closeModal();">🚫 بلاک</button>
+                ` : `
+                    <button class="btn btn-success" onclick="unbanUser(${user.id}); closeModal();">✅ آنبلاک</button>
+                `}
+                ${!user.is_admin ? `
+                    <button class="btn btn-primary" onclick="makeAdmin(${user.id}); closeModal();">⭐ افزودن مدیر</button>
+                ` : `
+                    <button class="btn btn-warning" onclick="removeAdmin(${user.id}); closeModal();">❌ حذف مدیر</button>
+                `}
+            `;
+            
+            document.getElementById('userModal').classList.add('active');
+            
+        } catch (error) {
+            console.error('Error viewing user:', error);
+            showNotification('error', 'خطا در دریافت اطلاعات کاربر');
+        }
+    }
+    
+    async function banUser(userId) {
+        if (!confirm('آیا از بلاک کردن این کاربر اطمینان دارید؟')) return;
+        
+        try {
+            await fetchAPI(`/api/user/${userId}/ban`, { method: 'POST' });
+            showNotification('success', 'کاربر با موفقیت بلاک شد');
+            loadUsers();
+        } catch (error) {
+            console.error('Error banning user:', error);
+            showNotification('error', 'خطا در بلاک کردن کاربر');
+        }
+    }
+    
+    async function unbanUser(userId) {
+        if (!confirm('آیا از آنبلاک کردن این کاربر اطمینان دارید؟')) return;
+        
+        try {
+            await fetchAPI(`/api/user/${userId}/unban`, { method: 'POST' });
+            showNotification('success', 'کاربر با موفقیت آنبلاک شد');
+            loadUsers();
+        } catch (error) {
+            console.error('Error unbanning user:', error);
+            showNotification('error', 'خطا در آنبلاک کردن کاربر');
+        }
+    }
+    
+    async function makeAdmin(userId) {
+        if (!confirm('آیا از افزودن این کاربر به عنوان مدیر اطمینان دارید؟')) return;
+        
+        try {
+            await fetchAPI(`/api/user/${userId}/admin`, { method: 'POST' });
+            showNotification('success', 'کاربر با موفقیت مدیر شد');
+            loadUsers();
+        } catch (error) {
+            console.error('Error making admin:', error);
+            showNotification('error', 'خطا در افزودن مدیر');
+        }
+    }
+    
+    async function removeAdmin(userId) {
+        if (!confirm('آیا از حذف دسترسی مدیر این کاربر اطمینان دارید؟')) return;
+        
+        try {
+            await fetchAPI(`/api/user/${userId}/admin`, { method: 'DELETE' });
+            showNotification('success', 'دسترسی مدیر با موفقیت حذف شد');
+            loadUsers();
+        } catch (error) {
+            console.error('Error removing admin:', error);
+            showNotification('error', 'خطا در حذف مدیر');
+        }
+    }
+    
+    // ============================================================
+    // مودال
+    // ============================================================
+    function closeModal() {
+        document.getElementById('userModal').classList.remove('active');
+    }
+    
+    // بستن مودال با کلیک خارج از آن
+    document.getElementById('userModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeModal();
+        }
+    });
+</script>
+
+<style>
+    /* ============================================================ */
+    /* استایل‌های مدیریت کاربران */
+    /* ============================================================ */
+    
+    .users-container {
+        padding: 20px 0;
+    }
+    
+    /* تولبار */
+    .users-toolbar {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    
+    .search-box {
+        flex: 1;
+        min-width: 200px;
+        position: relative;
+    }
+    
+    .search-box input {
+        width: 100%;
+        padding: 10px 40px 10px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 14px;
+        font-family: 'Vazirmatn', sans-serif;
+        transition: all 0.3s;
+        background: white;
+    }
+    
+    .search-box input:focus {
+        border-color: #6c5ce7;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+    }
+    
+    .search-box i {
+        position: absolute;
+        right: 15px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #b2bec3;
+    }
+    
+    .filter-box select {
+        padding: 10px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 14px;
+        font-family: 'Vazirmatn', sans-serif;
+        background: white;
+        color: #2d3436;
+        cursor: pointer;
+        transition: all 0.3s;
+        min-width: 150px;
+    }
+    
+    .filter-box select:focus {
+        border-color: #6c5ce7;
+        outline: none;
+    }
+    
+    /* جدول */
+    .users-table-container {
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        overflow-x: auto;
+        margin-bottom: 20px;
+    }
+    
+    .users-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 14px;
+    }
+    
+    .users-table thead {
+        background: #f8f9fa;
+    }
+    
+    .users-table th {
+        padding: 15px 12px;
+        text-align: right;
+        font-weight: 600;
+        color: #2d3436;
+        border-bottom: 2px solid #e9ecef;
+        white-space: nowrap;
+    }
+    
+    .users-table td {
+        padding: 12px;
+        border-bottom: 1px solid #f1f2f6;
+        vertical-align: middle;
+    }
+    
+    .users-table tbody tr:hover {
+        background: #f8f9fa;
+    }
+    
+    /* سلول کاربر */
+    .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .user-avatar-small {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    
+    /* نشان‌ها */
+    .role-badge {
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .role-admin {
+        background: rgba(108, 92, 231, 0.15);
+        color: #6c5ce7;
+    }
+    
+    .role-user {
+        background: rgba(0, 184, 148, 0.15);
+        color: #00b894;
+    }
+    
+    .status-badge {
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .status-active {
+        background: rgba(0, 184, 148, 0.15);
+        color: #00b894;
+    }
+    
+    .status-banned {
+        background: rgba(225, 112, 85, 0.15);
+        color: #e17055;
+    }
+    
+    /* دکمه‌های عملیات */
+    .action-buttons {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+    }
+    
+    .btn-action {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        color: white;
+    }
+    
+    .btn-action:hover {
+        transform: scale(1.1);
+    }
+    
+    .btn-view {
+        background: #0984e3;
+    }
+    .btn-view:hover {
+        background: #0873c7;
+    }
+    
+    .btn-ban {
+        background: #e17055;
+    }
+    .btn-ban:hover {
+        background: #d63031;
+    }
+    
+    .btn-unban {
+        background: #00b894;
+    }
+    .btn-unban:hover {
+        background: #00a381;
+    }
+    
+    .btn-make-admin {
+        background: #6c5ce7;
+    }
+    .btn-make-admin:hover {
+        background: #5f3dc4;
+    }
+    
+    .btn-remove-admin {
+        background: #fdcb6e;
+        color: #2d3436;
+    }
+    .btn-remove-admin:hover {
+        background: #f39c12;
+    }
+    
+    /* صفحه‌بندی */
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 15px;
+        padding: 10px 0;
+    }
+    
+    .pagination-info {
+        font-size: 14px;
+        color: #636e72;
+    }
+    
+    .pagination-controls {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .page-btn {
+        padding: 8px 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.3s;
+        color: #2d3436;
+    }
+    
+    .page-btn:hover:not(:disabled) {
+        border-color: #6c5ce7;
+        color: #6c5ce7;
+    }
+    
+    .page-btn:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    
+    .page-numbers {
+        display: flex;
+        gap: 4px;
+    }
+    
+    .page-number {
+        padding: 8px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 14px;
+        color: #2d3436;
+    }
+    
+    .page-number:hover {
+        background: #f1f2f6;
+    }
+    
+    .page-number.active {
+        background: #6c5ce7;
+        color: white;
+    }
+    
+    .page-dots {
+        padding: 8px 5px;
+        color: #b2bec3;
+    }
+    
+    /* وضعیت‌های جدول */
+    .loading-cell, .empty-cell, .error-cell {
+        text-align: center;
+        padding: 40px 20px;
+        color: #636e72;
+    }
+    
+    .loading-cell .spinner {
+        width: 30px;
+        height: 30px;
+        border: 3px solid #e9ecef;
+        border-top-color: #6c5ce7;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 10px;
+    }
+    
+    .empty-cell i, .error-cell i {
+        font-size: 40px;
+        display: block;
+        margin-bottom: 10px;
+        color: #dfe6e9;
+    }
+    
+    .error-cell i {
+        color: #e17055;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* مودال */
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(5px);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    
+    .modal.active {
+        display: flex;
+    }
+    
+    .modal-content {
+        background: white;
+        border-radius: 20px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        animation: modalSlideIn 0.3s ease;
+    }
+    
+    @keyframes modalSlideIn {
+        from {
+            transform: translateY(-30px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    .modal-header {
+        padding: 20px 25px;
+        border-bottom: 1px solid #e9ecef;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        font-size: 18px;
+        color: #2d3436;
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 20px;
+        cursor: pointer;
+        color: #636e72;
+        padding: 5px 10px;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .modal-close:hover {
+        background: #f1f2f6;
+        color: #2d3436;
+    }
+    
+    .modal-body {
+        padding: 25px;
+    }
+    
+    .user-detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 15px;
+    }
+    
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+    }
+    
+    .detail-label {
+        font-size: 12px;
+        color: #b2bec3;
+        font-weight: 500;
+    }
+    
+    .detail-value {
+        font-size: 14px;
+        color: #2d3436;
+        font-weight: 500;
+        word-break: break-all;
+    }
+    
+    .modal-footer {
+        padding: 20px 25px;
+        border-top: 1px solid #e9ecef;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+    }
+    
+    /* دکمه‌های عمومی */
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-family: 'Vazirmatn', sans-serif;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 500;
+    }
+    
+    .btn-primary {
+        background: #6c5ce7;
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #5f3dc4;
+    }
+    
+    .btn-success {
+        background: #00b894;
+        color: white;
+    }
+    .btn-success:hover {
+        background: #00a381;
+    }
+    
+    .btn-danger {
+        background: #e17055;
+        color: white;
+    }
+    .btn-danger:hover {
+        background: #d63031;
+    }
+    
+    .btn-warning {
+        background: #fdcb6e;
+        color: #2d3436;
+    }
+    .btn-warning:hover {
+        background: #f39c12;
+    }
+    
+    .btn-secondary {
+        background: #e9ecef;
+        color: #2d3436;
+    }
+    .btn-secondary:hover {
+        background: #dfe6e9;
+    }
+    
+    /* ریسپانسیو */
+    @media (max-width: 768px) {
+        .users-toolbar {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .search-box {
+            min-width: unset;
+        }
+        
+        .user-detail-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .pagination-container {
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .action-buttons {
+            justify-content: center;
+        }
+    }
+</style>
+{% endblock %}

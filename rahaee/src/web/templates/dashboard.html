@@ -1,0 +1,708 @@
+{% extends "base.html" %}
+
+{% block title %}داشبورد - رهایی{% endblock %}
+
+{% block page_title %}📊 داشبورد مدیریت{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <!-- ============================================================ -->
+    <!-- کارت‌های آمار سریع -->
+    <!-- ============================================================ -->
+    <div class="stats-grid">
+        <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">کل کاربران</span>
+                <span class="stat-value" id="totalUsers">0</span>
+            </div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>۱۲٪ رشد</span>
+            </div>
+        </div>
+        
+        <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+                <i class="fas fa-comments"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">پیام‌های امروز</span>
+                <span class="stat-value" id="messagesToday">0</span>
+            </div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>۸٪ رشد</span>
+            </div>
+        </div>
+        
+        <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">دستورات امروز</span>
+                <span class="stat-value" id="commandsToday">0</span>
+            </div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>۵٪ رشد</span>
+            </div>
+        </div>
+        
+        <div class="stat-card stat-card-info">
+            <div class="stat-icon">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">کاربران جدید امروز</span>
+                <span class="stat-value" id="newUsersToday">0</span>
+            </div>
+            <div class="stat-change positive">
+                <i class="fas fa-arrow-up"></i>
+                <span>۳٪ رشد</span>
+            </div>
+        </div>
+        
+        <div class="stat-card stat-card-purple">
+            <div class="stat-icon">
+                <i class="fas fa-globe"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">کاربران آنلاین</span>
+                <span class="stat-value" id="onlineUsers">0</span>
+            </div>
+            <div class="stat-change neutral">
+                <i class="fas fa-minus"></i>
+                <span>لحظه‌ای</span>
+            </div>
+        </div>
+        
+        <div class="stat-card stat-card-dark">
+            <div class="stat-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-info">
+                <span class="stat-label">آپ‌تایم</span>
+                <span class="stat-value" id="uptime">۰s</span>
+            </div>
+            <div class="stat-change neutral">
+                <i class="fas fa-check-circle"></i>
+                <span>فعال</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ============================================================ -->
+    <!-- نمودارها -->
+    <!-- ============================================================ -->
+    <div class="charts-grid">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>📈 فعالیت روزانه</h3>
+                <span class="chart-period">۷ روز اخیر</span>
+            </div>
+            <div class="chart-body">
+                <canvas id="activityChart"></canvas>
+            </div>
+        </div>
+        
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>👥 توزیع کاربران</h3>
+                <span class="chart-period">وضعیت فعلی</span>
+            </div>
+            <div class="chart-body">
+                <canvas id="userDistributionChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ============================================================ -->
+    <!-- فعالیت‌های اخیر -->
+    <!-- ============================================================ -->
+    <div class="recent-activities">
+        <div class="activity-header">
+            <h3>🔄 فعالیت‌های اخیر</h3>
+            <button class="btn-refresh" onclick="loadRecentActivities()">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+        </div>
+        <div class="activity-list" id="activityList">
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+                <div class="activity-content">
+                    <span class="activity-text">کاربر جدید اضافه شد: <strong>@UXlor</strong></span>
+                    <span class="activity-time">۲ دقیقه پیش</span>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="fas fa-comment"></i>
+                </div>
+                <div class="activity-content">
+                    <span class="activity-text">پیام جدید در گروه <strong>رهایی</strong></span>
+                    <span class="activity-time">۵ دقیقه پیش</span>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div class="activity-content">
+                    <span class="activity-text">تنظیمات ربات به‌روزرسانی شد</span>
+                    <span class="activity-time">۱۰ دقیقه پیش</span>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="fas fa-user-check"></i>
+                </div>
+                <div class="activity-content">
+                    <span class="activity-text">کاربر <strong>@user1</strong> تایید شد</span>
+                    <span class="activity-time">۱۵ دقیقه پیش</span>
+                </div>
+            </div>
+            <div class="activity-item">
+                <div class="activity-icon">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="activity-content">
+                    <span class="activity-text">بکاپ خودکار انجام شد</span>
+                    <span class="activity-time">۳۰ دقیقه پیش</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ============================================================ -->
+    <!-- اطلاعات سیستم -->
+    <!-- ============================================================ -->
+    <div class="system-info">
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">📱 نسخه ربات</span>
+                <span class="info-value" id="botVersion">v1.0.0</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">🐍 نسخه پایتون</span>
+                <span class="info-value" id="pythonVersion">3.10.12</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">💾 دیتابیس</span>
+                <span class="info-value" id="dbStatus">🟢 متصل</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">🌐 وب پنل</span>
+                <span class="info-value" id="webStatus">🟢 فعال</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // ============================================================
+    // بارگذاری اولیه
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        loadStats();
+        loadCharts();
+        loadRecentActivities();
+        
+        // بروزرسانی خودکار هر ۳۰ ثانیه
+        setInterval(loadStats, 30000);
+        setInterval(loadCharts, 60000);
+    });
+    
+    // ============================================================
+    // دریافت آمار
+    // ============================================================
+    async function loadStats() {
+        try {
+            const data = await fetchAPI('/api/stats');
+            
+            document.getElementById('totalUsers').textContent = data.data.total_users;
+            document.getElementById('messagesToday').textContent = data.data.messages_today;
+            document.getElementById('commandsToday').textContent = data.data.commands_today;
+            document.getElementById('newUsersToday').textContent = data.data.new_users_today;
+            document.getElementById('onlineUsers').textContent = data.data.online_users;
+            document.getElementById('uptime').textContent = data.data.uptime;
+            document.getElementById('botVersion').textContent = data.data.version;
+            
+        } catch (error) {
+            console.error('Error loading stats:', error);
+        }
+    }
+    
+    // ============================================================
+    // نمودارها
+    // ============================================================
+    let activityChart = null;
+    let userDistributionChart = null;
+    
+    async function loadCharts() {
+        try {
+            // دریافت داده برای نمودار فعالیت
+            const activityData = await fetchAPI('/api/stats/activity');
+            
+            // نمودار فعالیت
+            const ctx1 = document.getElementById('activityChart').getContext('2d');
+            
+            if (activityChart) {
+                activityChart.destroy();
+            }
+            
+            activityChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: activityData.data.labels || ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'],
+                    datasets: [{
+                        label: 'پیام‌ها',
+                        data: activityData.data.messages || [120, 190, 150, 180, 210, 160, 200],
+                        borderColor: '#6c5ce7',
+                        backgroundColor: 'rgba(108, 92, 231, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'دستورات',
+                        data: activityData.data.commands || [80, 120, 90, 110, 130, 100, 150],
+                        borderColor: '#00b894',
+                        backgroundColor: 'rgba(0, 184, 148, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    family: 'Vazirmatn',
+                                    size: 12
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.05)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // نمودار توزیع کاربران
+            const ctx2 = document.getElementById('userDistributionChart').getContext('2d');
+            
+            if (userDistributionChart) {
+                userDistributionChart.destroy();
+            }
+            
+            userDistributionChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['مدیران', 'کاربران عادی', 'کاربران جدید'],
+                    datasets: [{
+                        data: [5, 45, 10],
+                        backgroundColor: ['#6c5ce7', '#00b894', '#fdcb6e'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    family: 'Vazirmatn',
+                                    size: 12
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+            
+        } catch (error) {
+            console.error('Error loading charts:', error);
+        }
+    }
+    
+    // ============================================================
+    // فعالیت‌های اخیر
+    // ============================================================
+    async function loadRecentActivities() {
+        try {
+            const data = await fetchAPI('/api/activities/recent');
+            const list = document.getElementById('activityList');
+            
+            if (data.data.activities && data.data.activities.length > 0) {
+                list.innerHTML = data.data.activities.map(activity => `
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas ${activity.icon || 'fa-circle'}"></i>
+                        </div>
+                        <div class="activity-content">
+                            <span class="activity-text">${activity.text}</span>
+                            <span class="activity-time">${activity.time}</span>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                list.innerHTML = `
+                    <div class="activity-empty">
+                        <i class="fas fa-inbox"></i>
+                        <span>هیچ فعالیتی ثبت نشده است</span>
+                    </div>
+                `;
+            }
+            
+        } catch (error) {
+            console.error('Error loading activities:', error);
+        }
+    }
+</script>
+
+<style>
+    /* ============================================================ */
+    /* استایل‌های داشبورد */
+    /* ============================================================ */
+    
+    .dashboard-container {
+        padding: 20px 0;
+    }
+    
+    /* کارت‌های آمار */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+    }
+    
+    .stat-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        color: white;
+        flex-shrink: 0;
+    }
+    
+    .stat-card-primary .stat-icon {
+        background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+    }
+    .stat-card-success .stat-icon {
+        background: linear-gradient(135deg, #00b894, #55efc4);
+    }
+    .stat-card-warning .stat-icon {
+        background: linear-gradient(135deg, #fdcb6e, #f39c12);
+    }
+    .stat-card-info .stat-icon {
+        background: linear-gradient(135deg, #0984e3, #74b9ff);
+    }
+    .stat-card-purple .stat-icon {
+        background: linear-gradient(135deg, #6c5ce7, #fd79a8);
+    }
+    .stat-card-dark .stat-icon {
+        background: linear-gradient(135deg, #2d3436, #636e72);
+    }
+    
+    .stat-info {
+        flex: 1;
+    }
+    
+    .stat-label {
+        display: block;
+        font-size: 13px;
+        color: #636e72;
+        margin-bottom: 4px;
+    }
+    
+    .stat-value {
+        display: block;
+        font-size: 24px;
+        font-weight: 800;
+        color: #2d3436;
+    }
+    
+    .stat-change {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .stat-change.positive {
+        color: #00b894;
+        background: rgba(0, 184, 148, 0.1);
+    }
+    
+    .stat-change.negative {
+        color: #e17055;
+        background: rgba(225, 112, 85, 0.1);
+    }
+    
+    .stat-change.neutral {
+        color: #636e72;
+        background: rgba(99, 110, 114, 0.1);
+    }
+    
+    /* نمودارها */
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 2fr 1fr;
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .chart-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .chart-header h3 {
+        font-size: 16px;
+        color: #2d3436;
+        margin: 0;
+    }
+    
+    .chart-period {
+        font-size: 12px;
+        color: #636e72;
+        background: #f5f6fa;
+        padding: 4px 12px;
+        border-radius: 20px;
+    }
+    
+    .chart-body {
+        height: 250px;
+        position: relative;
+    }
+    
+    /* فعالیت‌های اخیر */
+    .recent-activities {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 30px;
+    }
+    
+    .activity-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+    }
+    
+    .activity-header h3 {
+        font-size: 16px;
+        color: #2d3436;
+        margin: 0;
+    }
+    
+    .btn-refresh {
+        background: none;
+        border: none;
+        color: #636e72;
+        cursor: pointer;
+        font-size: 16px;
+        transition: all 0.3s;
+        padding: 5px 10px;
+        border-radius: 8px;
+    }
+    
+    .btn-refresh:hover {
+        background: #f5f6fa;
+        color: #2d3436;
+        transform: rotate(180deg);
+    }
+    
+    .activity-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .activity-item {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        padding: 12px 15px;
+        background: #f8f9fa;
+        border-radius: 12px;
+        transition: all 0.3s;
+    }
+    
+    .activity-item:hover {
+        background: #f0f1f3;
+    }
+    
+    .activity-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c5ce7;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    
+    .activity-content {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .activity-text {
+        font-size: 14px;
+        color: #2d3436;
+    }
+    
+    .activity-text strong {
+        color: #6c5ce7;
+    }
+    
+    .activity-time {
+        font-size: 12px;
+        color: #636e72;
+    }
+    
+    .activity-empty {
+        text-align: center;
+        padding: 30px;
+        color: #636e72;
+    }
+    
+    .activity-empty i {
+        font-size: 40px;
+        display: block;
+        margin-bottom: 10px;
+        color: #dfe6e9;
+    }
+    
+    /* اطلاعات سیستم */
+    .system-info {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+    }
+    
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .info-label {
+        font-size: 13px;
+        color: #636e72;
+    }
+    
+    .info-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: #2d3436;
+    }
+    
+    /* ریسپانسیو */
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .activity-content {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 5px;
+        }
+        
+        .info-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .stat-card {
+            padding: 15px;
+        }
+    }
+</style>
+{% endblock %}

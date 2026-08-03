@@ -1,0 +1,984 @@
+{% extends "base.html" %}
+
+{% block title %}تنظیمات - رهایی{% endblock %}
+
+{% block page_title %}⚙️ تنظیمات{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <!-- ============================================================ -->
+    <!-- تب‌های تنظیمات -->
+    <!-- ============================================================ -->
+    <div class="settings-tabs">
+        <button class="tab-btn active" data-tab="general" onclick="switchTab('general')">
+            <i class="fas fa-sliders-h"></i>
+            عمومی
+        </button>
+        <button class="tab-btn" data-tab="security" onclick="switchTab('security')">
+            <i class="fas fa-shield-alt"></i>
+            امنیت
+        </button>
+        <button class="tab-btn" data-tab="ai" onclick="switchTab('ai')">
+            <i class="fas fa-brain"></i>
+            هوش مصنوعی
+        </button>
+        <button class="tab-btn" data-tab="appearance" onclick="switchTab('appearance')">
+            <i class="fas fa-palette"></i>
+            ظاهر
+        </button>
+        <button class="tab-btn" data-tab="advanced" onclick="switchTab('advanced')">
+            <i class="fas fa-code"></i>
+            پیشرفته
+        </button>
+    </div>
+    
+    <!-- ============================================================ -->
+    <!-- تب عمومی -->
+    <!-- ============================================================ -->
+    <div class="tab-content active" id="tab-general">
+        <div class="settings-card">
+            <h3>📋 تنظیمات عمومی</h3>
+            <form id="generalForm" onsubmit="saveSettings(event, 'general')">
+                <div class="form-group">
+                    <label for="botName">نام ربات</label>
+                    <input type="text" id="botName" name="bot_name" value="رهایی" class="form-control">
+                    <small>نامی که در پیام‌ها نمایش داده می‌شود</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="botLanguage">زبان ربات</label>
+                    <select id="botLanguage" name="bot_language" class="form-control">
+                        <option value="fa">فارسی</option>
+                        <option value="en">English</option>
+                        <option value="ar">العربية</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="logLevel">سطح لاگ‌گیری</label>
+                    <select id="logLevel" name="log_level" class="form-control">
+                        <option value="DEBUG">DEBUG</option>
+                        <option value="INFO" selected>INFO</option>
+                        <option value="WARNING">WARNING</option>
+                        <option value="ERROR">ERROR</option>
+                        <option value="CRITICAL">CRITICAL</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="welcomeMessage">پیام خوش‌آمدگویی</label>
+                    <textarea id="welcomeMessage" name="welcome_message" class="form-control" rows="3">به رهایی خوش آمدید! 🚀</textarea>
+                    <small>پیامی که به کاربران جدید ارسال می‌شود</small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    ذخیره تنظیمات
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ============================================================ -->
+    <!-- تب امنیت -->
+    <!-- ============================================================ -->
+    <div class="tab-content" id="tab-security">
+        <div class="settings-card">
+            <h3>🔒 تنظیمات امنیتی</h3>
+            <form id="securityForm" onsubmit="saveSettings(event, 'security')">
+                <div class="form-group toggle-group">
+                    <div class="toggle-label">
+                        <span>🛡️ ضد اسپم</span>
+                        <small>تشخیص و جلوگیری از ارسال پیام‌های تکراری</small>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="antiSpam" name="anti_spam" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="form-group toggle-group">
+                    <div class="toggle-label">
+                        <span>🔗 ضد لینک</span>
+                        <small>مسدودسازی لینک‌های خارجی در گروه‌ها</small>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="antiLinks" name="anti_links">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="form-group toggle-group">
+                    <div class="toggle-label">
+                        <span>🔐 جوین اجباری</span>
+                        <small>اجبار کاربران به عضویت در کانال قبل از استفاده</small>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="forceJoin" name="force_join">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="form-group" id="forceJoinChannelGroup" style="display: none;">
+                    <label for="forceJoinChannel">آیدی کانال/گروه</label>
+                    <input type="text" id="forceJoinChannel" name="force_join_channel" class="form-control" placeholder="مثلاً: @my_channel">
+                    <small>آیدی یا یوزرنیم کانال/گروهی که کاربران باید عضو شوند</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="maxMessageLength">حداکثر طول پیام</label>
+                    <input type="number" id="maxMessageLength" name="max_message_length" value="4096" class="form-control">
+                    <small>حداکثر تعداد کاراکتر مجاز برای هر پیام</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="floodWaitSleep">زمان تاخیر FloodWait (ثانیه)</label>
+                    <input type="number" id="floodWaitSleep" name="flood_wait_sleep" value="5" class="form-control" min="1" max="60">
+                    <small>زمان انتظار در صورت برخورد با محدودیت سرعت تلگرام</small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    ذخیره تنظیمات
+                </button>
+            </form>
+        </div>
+        
+        <div class="settings-card">
+            <h3>🔑 تغییر رمز عبور</h3>
+            <form id="passwordForm" onsubmit="changePassword(event)">
+                <div class="form-group">
+                    <label for="currentPassword">رمز عبور فعلی</label>
+                    <input type="password" id="currentPassword" class="form-control" placeholder="رمز عبور فعلی را وارد کنید">
+                </div>
+                
+                <div class="form-group">
+                    <label for="newPassword">رمز عبور جدید</label>
+                    <input type="password" id="newPassword" class="form-control" placeholder="رمز عبور جدید را وارد کنید">
+                </div>
+                
+                <div class="form-group">
+                    <label for="confirmPassword">تکرار رمز عبور جدید</label>
+                    <input type="password" id="confirmPassword" class="form-control" placeholder="رمز عبور جدید را تکرار کنید">
+                </div>
+                
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-key"></i>
+                    تغییر رمز عبور
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ============================================================ -->
+    <!-- تب هوش مصنوعی -->
+    <!-- ============================================================ -->
+    <div class="tab-content" id="tab-ai">
+        <div class="settings-card">
+            <h3>🧠 تنظیمات هوش مصنوعی</h3>
+            <form id="aiForm" onsubmit="saveSettings(event, 'ai')">
+                <div class="form-group toggle-group">
+                    <div class="toggle-label">
+                        <span>🤖 فعال‌سازی هوش مصنوعی</span>
+                        <small>فعال‌سازی پاسخ‌های هوشمند با GPT</small>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="aiEnabled" name="ai_enabled" checked>
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aiProvider">سرویس دهنده هوش مصنوعی</label>
+                    <select id="aiProvider" name="ai_provider" class="form-control">
+                        <option value="openai">OpenAI (GPT-4)</option>
+                        <option value="gemini">Google Gemini</option>
+                        <option value="claude">Claude AI</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aiApiKey">کلید API</label>
+                    <input type="password" id="aiApiKey" name="ai_api_key" class="form-control" placeholder="کلید API خود را وارد کنید">
+                    <small>کلید API را از سرویس دهنده مورد نظر دریافت کنید</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aiModel">مدل</label>
+                    <input type="text" id="aiModel" name="ai_model" class="form-control" value="gpt-4" placeholder="نام مدل">
+                </div>
+                
+                <div class="form-group">
+                    <label for="aiTemperature">دمای خلاقیت (۰ تا ۱)</label>
+                    <input type="number" id="aiTemperature" name="ai_temperature" class="form-control" value="0.7" min="0" max="1" step="0.1">
+                    <small>هر چه عدد بالاتر، پاسخ‌ها خلاقانه‌تر</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="aiMaxTokens">حداکثر توکن</label>
+                    <input type="number" id="aiMaxTokens" name="ai_max_tokens" class="form-control" value="1000" min="50" max="4000">
+                    <small>حداکثر تعداد توکن در پاسخ</small>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    ذخیره تنظیمات
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ============================================================ -->
+    <!-- تب ظاهر -->
+    <!-- ============================================================ -->
+    <div class="tab-content" id="tab-appearance">
+        <div class="settings-card">
+            <h3>🎨 تنظیمات ظاهری</h3>
+            <form id="appearanceForm" onsubmit="saveSettings(event, 'appearance')">
+                <div class="form-group">
+                    <label for="theme">تم</label>
+                    <select id="theme" name="theme" class="form-control" onchange="applyTheme(this.value)">
+                        <option value="light">روشن</option>
+                        <option value="dark">تاریک</option>
+                        <option value="auto">خودکار (بر اساس سیستم)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fontSize">اندازه فونت</label>
+                    <input type="range" id="fontSize" name="font_size" class="range-slider" min="12" max="20" value="14">
+                    <span id="fontSizeDisplay">14px</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="fontFamily">فونت</label>
+                    <select id="fontFamily" name="font_family" class="form-control">
+                        <option value="Vazirmatn">وزیرمتن</option>
+                        <option value="IRANSans">ایران سنس</option>
+                        <option value="Yekan">یکان</option>
+                        <option value="Arial">Arial</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="primaryColor">رنگ اصلی</label>
+                    <input type="color" id="primaryColor" name="primary_color" class="color-picker" value="#6c5ce7">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    ذخیره تنظیمات
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ============================================================ -->
+    <!-- تب پیشرفته -->
+    <!-- ============================================================ -->
+    <div class="tab-content" id="tab-advanced">
+        <div class="settings-card">
+            <h3>⚡ تنظیمات پیشرفته</h3>
+            
+            <div class="advanced-option">
+                <div class="option-info">
+                    <h4>🔄 آپدیت خودکار</h4>
+                    <p>فعال‌سازی آپدیت خودکار از گیت‌هاب</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="autoUpdate" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="advanced-option">
+                <div class="option-info">
+                    <h4>💾 بکاپ خودکار</h4>
+                    <p>بکاپ‌گیری خودکار از دیتابیس</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="autoBackup" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="advanced-option">
+                <div class="option-info">
+                    <h4>🔄 ری‌استارت خودکار</h4>
+                    <p>ری‌استارت خودکار در صورت کرش</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="autoRestart" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="form-group">
+                <label for="backupInterval">فاصله بکاپ (ثانیه)</label>
+                <input type="number" id="backupInterval" class="form-control" value="86400">
+                <small>پیش‌فرض: ۸۶۴۰۰ ثانیه (۲۴ ساعت)</small>
+            </div>
+            
+            <div class="advanced-actions">
+                <button class="btn btn-danger" onclick="clearCache()">
+                    <i class="fas fa-broom"></i>
+                    پاکسازی کش
+                </button>
+                <button class="btn btn-warning" onclick="restartBot()">
+                    <i class="fas fa-sync-alt"></i>
+                    ری‌استارت ربات
+                </button>
+                <button class="btn btn-danger" onclick="resetBot()">
+                    <i class="fas fa-undo-alt"></i>
+                    بازنشانی کامل
+                </button>
+            </div>
+        </div>
+        
+        <div class="settings-card">
+            <h3>📊 وضعیت سیستم</h3>
+            <div class="system-status-grid">
+                <div class="status-item">
+                    <span class="status-label">ربات</span>
+                    <span class="status-value online">🟢 فعال</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">دیتابیس</span>
+                    <span class="status-value online">🟢 متصل</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">وب پنل</span>
+                    <span class="status-value online">🟢 فعال</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">هوش مصنوعی</span>
+                    <span class="status-value online">🟢 فعال</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">حافظه استفاده‌شده</span>
+                    <span class="status-value">۱۲۵ MB</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">آپ‌تایم</span>
+                    <span class="status-value" id="systemUptime">۲ ساعت ۱۵ دقیقه</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // ============================================================
+    // مدیریت تب‌ها
+    // ============================================================
+    function switchTab(tabId) {
+        // مخفی کردن همه تب‌ها
+        document.querySelectorAll('.tab-content').forEach(el => {
+            el.classList.remove('active');
+        });
+        
+        // غیرفعال کردن همه دکمه‌ها
+        document.querySelectorAll('.tab-btn').forEach(el => {
+            el.classList.remove('active');
+        });
+        
+        // نمایش تب انتخاب شده
+        document.getElementById(`tab-${tabId}`).classList.add('active');
+        document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+    }
+    
+    // ============================================================
+    // بارگذاری تنظیمات
+    // ============================================================
+    document.addEventListener('DOMContentLoaded', function() {
+        loadSettings();
+        
+        // نمایش/مخفی کردن فیلد جوین اجباری
+        document.getElementById('forceJoin').addEventListener('change', function() {
+            document.getElementById('forceJoinChannelGroup').style.display = this.checked ? 'block' : 'none';
+        });
+        
+        // نمایش اندازه فونت
+        document.getElementById('fontSize').addEventListener('input', function() {
+            document.getElementById('fontSizeDisplay').textContent = this.value + 'px';
+        });
+    });
+    
+    async function loadSettings() {
+        try {
+            const data = await fetchAPI('/api/settings');
+            const settings = data.data;
+            
+            // پر کردن فرم‌ها
+            document.getElementById('botName').value = settings.bot_name || 'رهایی';
+            document.getElementById('botLanguage').value = settings.bot_language || 'fa';
+            document.getElementById('logLevel').value = settings.log_level || 'INFO';
+            document.getElementById('welcomeMessage').value = settings.welcome_message || '';
+            
+            document.getElementById('antiSpam').checked = settings.anti_spam !== false;
+            document.getElementById('antiLinks').checked = settings.anti_links || false;
+            document.getElementById('forceJoin').checked = settings.force_join || false;
+            document.getElementById('forceJoinChannelGroup').style.display = settings.force_join ? 'block' : 'none';
+            
+            document.getElementById('aiEnabled').checked = settings.ai_enabled !== false;
+            document.getElementById('aiProvider').value = settings.ai_provider || 'openai';
+            document.getElementById('aiTemperature').value = settings.ai_temperature || 0.7;
+            document.getElementById('aiMaxTokens').value = settings.ai_max_tokens || 1000;
+            
+            document.getElementById('theme').value = settings.theme || 'light';
+            document.getElementById('fontSize').value = settings.font_size || 14;
+            document.getElementById('fontSizeDisplay').textContent = (settings.font_size || 14) + 'px';
+            document.getElementById('fontFamily').value = settings.font_family || 'Vazirmatn';
+            document.getElementById('primaryColor').value = settings.primary_color || '#6c5ce7';
+            
+            // اعمال تم
+            applyTheme(settings.theme || 'light');
+            
+        } catch (error) {
+            console.error('Error loading settings:', error);
+            showNotification('error', 'خطا در بارگذاری تنظیمات');
+        }
+    }
+    
+    // ============================================================
+    // ذخیره تنظیمات
+    // ============================================================
+    async function saveSettings(event, type) {
+        event.preventDefault();
+        
+        const form = event.target;
+        const formData = new FormData(form);
+        const data = {};
+        
+        formData.forEach((value, key) => {
+            if (key === 'anti_spam' || key === 'anti_links' || key === 'force_join' || key === 'ai_enabled') {
+                data[key] = value === 'on' || value === 'checked';
+            } else {
+                data[key] = value;
+            }
+        });
+        
+        try {
+            await fetchAPI('/api/settings', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            
+            showNotification('success', 'تنظیمات با موفقیت ذخیره شد');
+        } catch (error) {
+            console.error('Error saving settings:', error);
+            showNotification('error', 'خطا در ذخیره تنظیمات');
+        }
+    }
+    
+    // ============================================================
+    // تغییر رمز عبور
+    // ============================================================
+    async function changePassword(event) {
+        event.preventDefault();
+        
+        const current = document.getElementById('currentPassword').value;
+        const newPass = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmPassword').value;
+        
+        if (!current || !newPass || !confirm) {
+            showNotification('warning', 'لطفاً همه فیلدها را پر کنید');
+            return;
+        }
+        
+        if (newPass !== confirm) {
+            showNotification('warning', 'رمز عبور جدید و تکرار آن مطابقت ندارد');
+            return;
+        }
+        
+        if (newPass.length < 6) {
+            showNotification('warning', 'رمز عبور جدید باید حداقل ۶ کاراکتر باشد');
+            return;
+        }
+        
+        try {
+            await fetchAPI('/api/change-password', {
+                method: 'POST',
+                body: JSON.stringify({
+                    current_password: current,
+                    new_password: newPass
+                })
+            });
+            
+            showNotification('success', 'رمز عبور با موفقیت تغییر کرد');
+            document.getElementById('passwordForm').reset();
+            
+        } catch (error) {
+            console.error('Error changing password:', error);
+            showNotification('error', 'خطا در تغییر رمز عبور');
+        }
+    }
+    
+    // ============================================================
+    // عملیات پیشرفته
+    // ============================================================
+    async function clearCache() {
+        if (!confirm('آیا از پاکسازی کش اطمینان دارید؟')) return;
+        
+        try {
+            await fetchAPI('/api/clear-cache', { method: 'POST' });
+            showNotification('success', 'کش با موفقیت پاکسازی شد');
+        } catch (error) {
+            console.error('Error clearing cache:', error);
+            showNotification('error', 'خطا در پاکسازی کش');
+        }
+    }
+    
+    async function restartBot() {
+        if (!confirm('آیا از ری‌استارت ربات اطمینان دارید؟')) return;
+        
+        try {
+            await fetchAPI('/api/restart', { method: 'POST' });
+            showNotification('success', 'ربات در حال ری‌استارت است...');
+        } catch (error) {
+            console.error('Error restarting bot:', error);
+            showNotification('error', 'خطا در ری‌استارت ربات');
+        }
+    }
+    
+    async function resetBot() {
+        if (!confirm('⚠️ هشدار! این عمل تمام تنظیمات را به حالت پیش‌فرض بازمی‌گرداند. ادامه می‌دهید؟')) return;
+        
+        try {
+            await fetchAPI('/api/reset', { method: 'POST' });
+            showNotification('success', 'ربات با موفقیت بازنشانی شد');
+            setTimeout(() => location.reload(), 2000);
+        } catch (error) {
+            console.error('Error resetting bot:', error);
+            showNotification('error', 'خطا در بازنشانی ربات');
+        }
+    }
+    
+    // ============================================================
+    // اعمال تم
+    // ============================================================
+    function applyTheme(theme) {
+        const root = document.documentElement;
+        
+        if (theme === 'dark') {
+            root.style.setProperty('--bg-primary', '#1a1a2e');
+            root.style.setProperty('--bg-secondary', '#16213e');
+            root.style.setProperty('--text-primary', '#ffffff');
+            root.style.setProperty('--text-secondary', '#a0aec0');
+            root.style.setProperty('--border-color', '#2d3748');
+            root.style.setProperty('--shadow-color', 'rgba(0,0,0,0.3)');
+        } else {
+            root.style.setProperty('--bg-primary', '#f8f9fa');
+            root.style.setProperty('--bg-secondary', '#ffffff');
+            root.style.setProperty('--text-primary', '#2d3436');
+            root.style.setProperty('--text-secondary', '#636e72');
+            root.style.setProperty('--border-color', '#e9ecef');
+            root.style.setProperty('--shadow-color', 'rgba(0,0,0,0.05)');
+        }
+        
+        // ذخیره در localStorage
+        localStorage.setItem('theme', theme);
+    }
+    
+    // بارگذاری تم ذخیره شده
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    document.getElementById('theme').value = savedTheme;
+    applyTheme(savedTheme);
+</script>
+
+<style>
+    /* ============================================================ */
+    /* استایل‌های تنظیمات */
+    /* ============================================================ */
+    
+    .settings-container {
+        padding: 20px 0;
+    }
+    
+    /* تب‌ها */
+    .settings-tabs {
+        display: flex;
+        gap: 5px;
+        margin-bottom: 25px;
+        background: white;
+        padding: 5px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+    
+    .tab-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 8px;
+        background: transparent;
+        cursor: pointer;
+        font-size: 14px;
+        font-family: 'Vazirmatn', sans-serif;
+        color: #636e72;
+        transition: all 0.3s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .tab-btn:hover {
+        background: rgba(108, 92, 231, 0.05);
+        color: #2d3436;
+    }
+    
+    .tab-btn.active {
+        background: #6c5ce7;
+        color: white;
+        box-shadow: 0 4px 15px rgba(108, 92, 231, 0.3);
+    }
+    
+    .tab-content {
+        display: none;
+        animation: fadeIn 0.3s ease;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* کارت‌های تنظیمات */
+    .settings-card {
+        background: white;
+        border-radius: 16px;
+        padding: 25px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        margin-bottom: 20px;
+    }
+    
+    .settings-card h3 {
+        margin: 0 0 20px 0;
+        font-size: 18px;
+        color: #2d3436;
+    }
+    
+    /* فرم‌ها */
+    .form-group {
+        margin-bottom: 18px;
+    }
+    
+    .form-group label {
+        display: block;
+        font-weight: 500;
+        font-size: 14px;
+        color: #2d3436;
+        margin-bottom: 5px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        font-size: 14px;
+        font-family: 'Vazirmatn', sans-serif;
+        transition: all 0.3s;
+        background: white;
+    }
+    
+    .form-control:focus {
+        border-color: #6c5ce7;
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+    }
+    
+    .form-control:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    .form-control[type="color"] {
+        padding: 5px;
+        height: 50px;
+        cursor: pointer;
+    }
+    
+    textarea.form-control {
+        resize: vertical;
+        min-height: 80px;
+    }
+    
+    .form-group small {
+        display: block;
+        font-size: 12px;
+        color: #b2bec3;
+        margin-top: 4px;
+    }
+    
+    /* دکمه‌های ضامن */
+    .toggle-group {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid #f1f2f6;
+    }
+    
+    .toggle-group:last-child {
+        border-bottom: none;
+    }
+    
+    .toggle-label {
+        flex: 1;
+    }
+    
+    .toggle-label span {
+        display: block;
+        font-weight: 500;
+        font-size: 14px;
+        color: #2d3436;
+    }
+    
+    .toggle-label small {
+        font-size: 12px;
+        color: #b2bec3;
+    }
+    
+    .toggle-switch {
+        position: relative;
+        width: 50px;
+        height: 28px;
+        flex-shrink: 0;
+        cursor: pointer;
+    }
+    
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    
+    .toggle-slider {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #dfe6e9;
+        border-radius: 34px;
+        transition: all 0.3s;
+    }
+    
+    .toggle-slider::before {
+        content: '';
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        left: 3px;
+        bottom: 3px;
+        background: white;
+        border-radius: 50%;
+        transition: all 0.3s;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
+    .toggle-switch input:checked + .toggle-slider {
+        background: #6c5ce7;
+    }
+    
+    .toggle-switch input:checked + .toggle-slider::before {
+        transform: translateX(22px);
+    }
+    
+    /* اسلایدر */
+    .range-slider {
+        width: 100%;
+        height: 6px;
+        -webkit-appearance: none;
+        background: #dfe6e9;
+        border-radius: 3px;
+        outline: none;
+        transition: background 0.3s;
+    }
+    
+    .range-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #6c5ce7;
+        cursor: pointer;
+        box-shadow: 0 2px 8px rgba(108, 92, 231, 0.3);
+    }
+    
+    .range-slider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background: #6c5ce7;
+        cursor: pointer;
+        border: none;
+    }
+    
+    /* گزینه‌های پیشرفته */
+    .advanced-option {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 0;
+        border-bottom: 1px solid #f1f2f6;
+    }
+    
+    .advanced-option:last-child {
+        border-bottom: none;
+    }
+    
+    .option-info h4 {
+        margin: 0;
+        font-size: 14px;
+        color: #2d3436;
+    }
+    
+    .option-info p {
+        margin: 3px 0 0 0;
+        font-size: 12px;
+        color: #b2bec3;
+    }
+    
+    .advanced-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 20px;
+    }
+    
+    /* وضعیت سیستم */
+    .system-status-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+    }
+    
+    .status-item {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+    }
+    
+    .status-label {
+        font-size: 12px;
+        color: #b2bec3;
+        font-weight: 500;
+    }
+    
+    .status-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: #2d3436;
+    }
+    
+    .status-value.online {
+        color: #00b894;
+    }
+    
+    .status-value.offline {
+        color: #e17055;
+    }
+    
+    /* دکمه‌ها */
+    .btn {
+        padding: 10px 25px;
+        border: none;
+        border-radius: 10px;
+        font-size: 14px;
+        font-family: 'Vazirmatn', sans-serif;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    
+    .btn-primary {
+        background: #6c5ce7;
+        color: white;
+    }
+    .btn-primary:hover {
+        background: #5f3dc4;
+    }
+    
+    .btn-warning {
+        background: #fdcb6e;
+        color: #2d3436;
+    }
+    .btn-warning:hover {
+        background: #f39c12;
+    }
+    
+    .btn-danger {
+        background: #e17055;
+        color: white;
+    }
+    .btn-danger:hover {
+        background: #d63031;
+    }
+    
+    /* ریسپانسیو */
+    @media (max-width: 768px) {
+        .settings-tabs {
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 5px;
+        }
+        
+        .tab-btn {
+            padding: 8px 15px;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+        
+        .settings-card {
+            padding: 15px;
+        }
+        
+        .toggle-group {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        
+        .advanced-actions {
+            flex-direction: column;
+        }
+        
+        .advanced-actions .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .system-status-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .system-status-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>{% block title %}رهایی - پنل مدیریت{% endblock %}</title>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Socket.IO -->
+    <script src="https://cdn.socket.io/4.5.0/socket.io.min.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- ============================================================ -->
+    <!-- نوار کناری -->
+    <!-- ============================================================ -->
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <div class="brand-icon">𓃠</div>
+            <div class="brand-text">
+                <span class="brand-name">رهایی</span>
+                <span class="brand-version">v1.0.0</span>
+            </div>
+        </div>
+        
+        <div class="sidebar-user">
+            <div class="user-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="user-info">
+                <span class="user-name">{{ user or 'مدیر' }}</span>
+                <span class="user-role">مالک</span>
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <a href="{{ url_for('dashboard') }}" class="nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-chart-pie"></i>
+                <span>داشبورد</span>
+            </a>
+            <a href="{{ url_for('users') }}" class="nav-item {% if request.endpoint == 'users' %}active{% endif %}">
+                <i class="fas fa-users"></i>
+                <span>کاربران</span>
+            </a>
+            <a href="{{ url_for('settings') }}" class="nav-item {% if request.endpoint == 'settings' %}active{% endif %}">
+                <i class="fas fa-cog"></i>
+                <span>تنظیمات</span>
+            </a>
+            <a href="#" class="nav-item" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+                <i class="fas fa-sign-out-alt"></i>
+                <span>خروج</span>
+            </a>
+            <form id="logout-form" action="{{ url_for('logout') }}" method="POST" style="display: none;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+            </form>
+        </nav>
+    </div>
+    
+    <!-- ============================================================ -->
+    <!-- محتوای اصلی -->
+    <!-- ============================================================ -->
+    <div class="main-content" id="mainContent">
+        <!-- هدر -->
+        <header class="main-header">
+            <div class="header-left">
+                <button class="toggle-sidebar" id="toggleSidebar">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 class="page-title">{% block page_title %}داشبورد{% endblock %}</h1>
+            </div>
+            <div class="header-right">
+                <span class="header-time" id="headerTime"></span>
+                <div class="header-status">
+                    <span class="status-dot online"></span>
+                    <span class="status-text">آنلاین</span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- محتوای صفحه -->
+        <div class="page-content">
+            {% block content %}{% endblock %}
+        </div>
+        
+        <!-- فوتر -->
+        <footer class="main-footer">
+            <p>© 2026 <strong>رهایی</strong> - توسعه‌دهنده: <a href="https://t.me/UXlor" target="_blank">@UXlor</a></p>
+        </footer>
+    </div>
+    
+    <!-- ============================================================ -->
+    <!-- اسکریپت‌ها -->
+    <!-- ============================================================ -->
+    <script>
+        // ============================================================
+        // مدیریت نوار کناری
+        // ============================================================
+        const sidebar = document.getElementById('sidebar');
+        const toggleBtn = document.getElementById('toggleSidebar');
+        const mainContent = document.getElementById('mainContent');
+        
+        toggleBtn.addEventListener('click', function() {
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        });
+        
+        // ============================================================
+        // ساعت زنده
+        // ============================================================
+        function updateClock() {
+            const now = new Date();
+            const time = now.toLocaleTimeString('fa-IR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            document.getElementById('headerTime').textContent = time;
+        }
+        updateClock();
+        setInterval(updateClock, 1000);
+        
+        // ============================================================
+        // WebSocket
+        // ============================================================
+        let socket = io();
+        
+        socket.on('connect', function() {
+            console.log('🔌 Connected to WebSocket');
+        });
+        
+        socket.on('disconnect', function() {
+            console.log('🔌 Disconnected from WebSocket');
+        });
+        
+        socket.on('realtime_stats', function(data) {
+            // بروزرسانی آمار لحظه‌ای
+            if (document.getElementById('onlineUsers')) {
+                document.getElementById('onlineUsers').textContent = data.online_users;
+            }
+            if (document.getElementById('uptime')) {
+                document.getElementById('uptime').textContent = data.uptime;
+            }
+        });
+        
+        // ============================================================
+        // درخواست‌های AJAX
+        // ============================================================
+        async function fetchAPI(url, options = {}) {
+            try {
+                const response = await fetch(url, {
+                    ...options,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...(options.headers || {})
+                    }
+                });
+                const data = await response.json();
+                if (!data.success) {
+                    throw new Error(data.error || 'خطا در درخواست');
+                }
+                return data;
+            } catch (error) {
+                console.error('API Error:', error);
+                showNotification('error', error.message);
+                throw error;
+            }
+        }
+        
+        // ============================================================
+        // اعلان‌ها
+        // ============================================================
+        function showNotification(type, message) {
+            const colors = {
+                success: '#10b981',
+                error: '#ef4444',
+                warning: '#f59e0b',
+                info: '#3b82f6'
+            };
+            
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.innerHTML = `
+                <div class="notification-content">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : type === 'warning' ? 'fa-exclamation-triangle' : 'fa-info-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+                <button class="notification-close" onclick="this.parentElement.remove()">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${colors[type] || '#3b82f6'};
+                color: white;
+                padding: 15px 20px;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                z-index: 9999;
+                min-width: 300px;
+                animation: slideInRight 0.3s ease;
+                direction: rtl;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOutRight 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+        
+        // ============================================================
+        // استایل‌های داینامیک برای اعلان‌ها
+        // ============================================================
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+            .notification-content {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex: 1;
+            }
+            .notification-content i {
+                font-size: 20px;
+            }
+            .notification-close {
+                background: none;
+                border: none;
+                color: rgba(255,255,255,0.7);
+                cursor: pointer;
+                font-size: 16px;
+                padding: 0 5px;
+                transition: color 0.2s;
+            }
+            .notification-close:hover {
+                color: white;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // ============================================================
+        // جلوگیری از بسته شدن صفحه با کلیک روی لینک‌های خارجی
+        // ============================================================
+        document.querySelectorAll('a[target="_blank"]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                // اجازه باز شدن در تب جدید
+            });
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+          </html>
